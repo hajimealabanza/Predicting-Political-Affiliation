@@ -1,3 +1,2 @@
 # Red or Blue
-Through three classification methods, logistic regression, random forest, and linear discriminant analysis, I analyze whether a collection of 10 energy sources can determine if a state is red (voters predominantly in support of Republican Party) or blue (voters predominantly in support of Democratic Party). A successful model will reveal whether energy 
-portfolios truly differ between red and blue states. 
+I analyze whether a collection of 10 energy sources can determine if a state is red (voters predominantly in support of Republican Party) or blue (voters predominantly in support of Democratic Party) using three supervised learning models: logistic regression, random forest, and k-nearest neighbor. The models achieved 84%, 80%, and 83% accuracy, respectively. Furthermore, the result show that red states generate more electricty from coal and petrol while blue states generate more electricty from biomass. 
