@@ -250,11 +250,6 @@ normalization <-function(x) { (x -min(x))/(max(x)-min(x))} #create normalization
 m6_norm <- as.data.frame(lapply(m6[,c(4:13)], normalization)) #run nomalization on all features
 summary(m6_norm)
 
-# Determine number of clusters
-library('factoextra')
-m6_scaled <- scale(m6[,c(4:13)]) #Scaling the data
-fviz_nbclust(m6_scaled,kmeans, method = "silhouette") #7 clusters is optimal
-
 m6_train <- m6_norm[gen_rand,] #create training
 m6_test <- m6_norm[-gen_rand,] #create test 
 m6_target_cat <- m6[gen_rand,3] #4th column is reponse, political affiliation
