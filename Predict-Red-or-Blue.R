@@ -1,5 +1,7 @@
 rm(list=ls())
 
+###1.Preprocessing Data###
+
 ##import data##
 library('readxl')
 library('tidyr')
@@ -7,12 +9,10 @@ customer=read_excel('/Users/halabanz/Desktop/Applied Multivariate/customers.xlsx
 gen=read_excel('/Users/halabanz/Desktop/Applied Multivariate/generation.xlsx')
 redvsblue=read_excel('/Users/halabanz/Desktop/Applied Multivariate/redvsblue.xlsx')
 
-
 ##clean customer data##
 str(customer) #look at structure of dataset
 customer2=customer[customer$Year==2016 & customer$`Industry Sector Category`=='Total Electric Industry',-c(3:8)] #select row for: 2016 entries and Total Electric Industry
 sort(customer$State) #sort by in alphabetical order, asc
-
 
 ##clean generation data##
 str(gen)
@@ -23,7 +23,6 @@ sort(gen3$STATE)
 summary(gen3)
 gen4=gen3[,-c(4,10,12,14)] #remove columns not used in analysis
 
-
 ##merge data##
 m1=merge(gen4,customer2,by.x = 'STATE',by.y = 'State') #merge generation and customer data
 m2=m1[,-c(13)] #get rid of duplicate year
@@ -31,14 +30,12 @@ colnames(m2)[13]='Total_Customers' #rename column
 m3=merge(m2,redvsblue,by.x='STATE',by.y = 'STATE') #merge m2 and data for political affilation
 summary(m3)
 
-
 ##impute missing values to 0##
 m3$Other[m3$Other<0]=0 #need get rid of negative values, will sqrt variables later
                        # only 3 negative values and they are small, so shouldnt impact analysis
 m3[is.na(m3)] <- 0 #after doing some research, data seems to be missing because generation was at 0 or close to it
 str(m3)
 summary(m3)
-
 
 ##transform variables##
 m4=m3 #making sure that data (m3) is available in its original form
@@ -67,7 +64,9 @@ str(m6) #check structure of final dataframe
 m6[,4:13] <- lapply(m6[,4:13], as.numeric) #change from character to numeric
 
 
-##bar charts of electricity generation by source##
+##2.Exploratory Analysis##
+
+##2.1 bar charts of electricity generation by source##
 library('ggplot2')
 library('dplyr')
 library('scales')
@@ -90,8 +89,7 @@ percentage2=percentage1[1,c(15:24)]
 percentage3=percentage2 %>% gather(Source, Total_Percent, coal:other) #reshape from wide to long
 plot1=ggplot(data=percentage3,aes(x=Source,y=Total_Percent,fill=Source))+geom_bar(stat='identity')+xlab('Source')+ylab('% Total')+ggtitle('Electricity Generation in United States (2016)')+ylim(0,50)+  theme(plot.title = element_text(hjust = 0.5));plot1
 
-
-##generate usa heatmap of electricity generation (Alaska and Hawaii included)##
+##2.2 generate usa heatmap of electricity generation (Alaska and Hawaii included)##
 install.packages("devtools")
 devtools::install_github("wmurphyrd/fiftystater")
 library(fiftystater)
@@ -112,8 +110,7 @@ p <- ggplot(renewables, aes(map_id = State)) +
         panel.background = element_blank());p
 
 
-##boxplots##
-
+##2.3 boxplots##
 m5[] <- lapply(m5,sqrt) #sqrt values in dataframe in order to make differences more clear in plot
 
 #repeat steps from previous section
@@ -124,14 +121,15 @@ levels(m7$Affiliation)=c('Red State','Blue State')
 contrasts(m7$Affiliation)
 colnames(m7)[c(4:13)]=c('solar','coal','ng','wind','bio','hydro','wood','petrol','nuclear','other') #change names
 m7[,4:13] <- lapply(m7[,4:13], as.numeric) #change from character to numeric
-
 #plot
 aggregate(m6[,4:13],list(m6$Affiliation),mean) #numbers indicate large mean differences in coal, bio, and petrol
 long_DF <- m7 %>% gather(Source, Generation, solar:other) #reshape from wide to long in order to plot
 plot2=ggplot(data=long_DF,aes(x=Source,y=Generation,fill=Affiliation))+geom_boxplot()+xlab('Electricity Generation by Source')+ylab('Generation per Customer (√MWH)')+ggtitle('Red States vs. Blue States (2016)')+  theme(plot.title = element_text(hjust = 0.5));plot2
 
 
-##logistic regression##
+###3.Building Models##
+
+##3.1. logistic regression##
 install.packages("stargazer")
 library('stargazer')
 library('MASS')
@@ -160,10 +158,9 @@ anova(logit2,test='LRT') #keep coal bio
 drop1(logit2,test = 'Rao') #bio petrol
 anova(logit2,test='Rao') #coal bio petrol
 
-#update model 2
+#update model 2, drop ng
 logit3=glm(Affiliation ~ coal+bio+petrol,family=binomial(link='logit'),data = m6)
-summary(logit3)
-logit3$fitted.values #explore which states are being misclassifed
+summary(logit3) #bio and petrol are significant at 5% level, coal at 10% level
 
 #variable selection 3
 drop1(logit3,test = 'LRT') #keep variables coal and bio
@@ -172,7 +169,8 @@ drop1(logit3,test = 'Rao') #bio petrol
 anova(logit3,test='Rao') #all
 
 #since no variables can be decisively dropped, logit3 model is final
-summary(logit3)
+summary(logit3) #bio coef. is positive, meaning if a state produces more bio (all else equal), it is more likely to be blue
+                #coal and petrol coef. are neg, so vice versa
 
 #prediction 
 p1 <- predict(logit3,newdata=m6,type='response')
@@ -181,21 +179,69 @@ p1=as.factor(p1)
 str(p1)
 levels(m6$Affiliation) <- c("0", "1")
 misClasificError <- mean(p1 != m6$Affiliation);misClasificError
-print(paste('Accuracy',1-misClasificError)) #84%
+print(paste('Accuracy',1-misClasificError)) #84% Accuracy
+
+#Analyze quality of model 
+install.packages('generalhoslem') #Hosmer-Lemeshow Stat
+library('generalhoslem')
+generalhoslem::logitgof(m6$Affiliation,fitted(logit3)) #p-value of 0.92 shows no evidence that predicted different from observed
+
+install.packages('fmsb') #Neagelkerke
+library('fmsb')
+NagelkerkeR2(logit3) #R2 value of 0.67 indicates a model with decent prediction
+
+OptimisedConc=function(model) #Concordance measure
+{
+  Data = cbind(model$y, model$fitted.values) 
+  ones = Data[Data[,1] == 1,]
+  zeros = Data[Data[,1] == 0,]
+  conc=matrix(0, dim(zeros)[1], dim(ones)[1])
+  disc=matrix(0, dim(zeros)[1], dim(ones)[1])
+  ties=matrix(0, dim(zeros)[1], dim(ones)[1])
+  for (j in 1:dim(zeros)[1])
+  {
+    for (i in 1:dim(ones)[1])
+    {
+      if (ones[i,2]>zeros[j,2])
+      {conc[j,i]=1}
+      else if (ones[i,2]<zeros[j,2])
+      {disc[j,i]=1}
+      else if (ones[i,2]==zeros[j,2])
+      {ties[j,i]=1}
+    }
+  }
+  Pairs=dim(zeros)[1]*dim(ones)[1]
+  PercentConcordance=(sum(conc)/Pairs)*100
+  PercentDiscordance=(sum(disc)/Pairs)*100
+  PercentTied=(sum(ties)/Pairs)*100
+  return(list("Percent Concordance"=PercentConcordance,"Percent Discordance"=PercentDiscordance,"Percent Tied"=PercentTied,"Pairs"=Pairs))
+}
+OptimisedConc(logit3) #model shows prediction of 92%, which is very good
 
 #check for outliers
+N=length(m6$STATE) #global influence plot
+STATE=1:N
+hat.bw=hatvalues(logit3)
+rstudent.bw=rstudent(logit3)
+par(mfrow=c(2,2))
+plot(hat.bw,rstudent.bw)
+dffits.bw=dffits(logit3)
+plot(STATE,dffits.bw,type = 'l')
+cov.bw=covratio(logit3)
+plot(STATE,cov.bw,type = 'l')
+cook.bw=cooks.distance(logit3)
+plot(STATE,cook.bw,type = 'l')
 par(mfrow=c(1,1))
-plot(state,cook.bw)
-identify(state,cook.bw)
+plot(STATE,cook.bw)
+identify(STATE,cook.bw)
 cook.bw
 
-#observations 12 (HI), 14 (ID),and 33 (NM)look to be influential obs.
+#observations 12 (HI), 14 (ID),and 33 (NM) look to be influential obs.
 #Hawaii produces a lot of petrol for a blue state
 #NM is a blue state that doesnt produce much biomass (37th) 
 #ID produces the least amount of coal (21st) and most biomass (47th) per customer out of any red state
 
 #create boxplots to compare outliers of ID and NM 
-
 #coal for outliers compared to nations average
 plot3=ggplot(data = m7[33,],aes(x=STATE,y=coal))+geom_bar(stat='identity',fill='blue',width = 0.5);plot3
 aggregate(m7$coal,list(m7$Affiliation),mean)
@@ -225,7 +271,7 @@ library('xtable')
 xtable(combine)
 
 
-##random forest##
+##3.2 random forest##
 library('randomForest')
 library('caret')
 
@@ -243,7 +289,7 @@ tuneRF(m6[,-c(1)],m6[,c(1)],stepFactor = 0.5,plot = TRUE,ntreeTry = 100,trace = 
 varImpPlot(rf1) #bio and coal look to be only important variables
 
 
-##KNN##
+##3.3. KNN##
 gen_rand <- sample(1:nrow(m6), 0.9 * nrow(m6)) #Generate a random number that is 90% of the total number of rows in dataset.
                                                #90% is chosen because there is not much data to begin with
 normalization <-function(x) { (x -min(x))/(max(x)-min(x))} #create normalization function 
@@ -256,12 +302,13 @@ m6_target_cat <- m6[gen_rand,3] #4th column is reponse, political affiliation
 m6_test_cat <- m6[-gen_rand,3] #actual values
 
 library(class)
-knn1 <- knn(m6_train,m6_test,cl=m6_target_cat,k=7) #run knn
+knn1 <- knn(m6_train,m6_test,cl=m6_target_cat,k=7) #run knn (k=7 seems to produce best result)
 confusion <- table(knn1,m6_test_cat) #confusion matrix
 accuracy <- function(x){sum(diag(x)/(sum(rowSums(x)))) * 100}
 accuracy(confusion) # 83% accuracy
 
 
+###4.Summarize###
 ##build table combining all models##
 Logistic_Error=c(0.16)
 RandomForest_Error=c(0.20)
