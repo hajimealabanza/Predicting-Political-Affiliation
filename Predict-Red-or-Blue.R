@@ -40,7 +40,7 @@ summary(m3)
 ##transform variables##
 m4=m3 #making sure that data (m3) is available in its original form
 
-##calulate total generation per customer##
+#calulate total generation per customer#
 m4$solar_gen_customer=(m4$`Solar Thermal and Photovoltaic`/m4$Total_Customers)
 m4$coal_gen_customer=(m4$Coal/m4$Total_Customers)
 m4$ng_gen_customer=(m4$`Natural Gas`/m4$Total_Customers)
@@ -307,21 +307,21 @@ varImpPlot(rf1) #bio and coal look to be only important variables
 ##3.4. KNN##
 library(class)
 
-##Generate a random number that is 80% of the total number of rows in dataset##
+#Generate a random number that is 80% of the total number of rows in dataset#
 gen_rand <- sample(1:nrow(m6), 0.80 * nrow(m6)) 
 
-##create normalization function##
+#create normalization function#
 normalization <-function(x) { (x -min(x))/(max(x)-min(x))} 
 m6_norm <- as.data.frame(lapply(m6[,c(4:13)], normalization)) #run nomalization on all features
 summary(m6_norm)
 
-##create training/test##
+#create training/test#
 m6_train <- m6_norm[gen_rand,] #create training
 m6_test <- m6_norm[-gen_rand,] #create test 
 m6_target_cat <- m6[gen_rand,3] #4th column is reponse, political affiliation
 m6_test_cat <- m6[-gen_rand,3] #actual values
 
-##run model (done 3 times to assess stability)##
+#run model (done 3 times to assess stability)#
 knn1 <- knn(m6_train,m6_test,cl=m6_target_cat,k=3)  
 confusion <- table(knn1,m6_test_cat) #confusion matrix
 accuracy <- function(x){sum(diag(x)/(sum(rowSums(x)))) * 100}
