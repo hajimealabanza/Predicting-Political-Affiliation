@@ -173,9 +173,10 @@ anova(logit3,test='LRT') #keep variables coal and bio
 drop1(logit3,test = 'Rao') #bio petrol
 anova(logit3,test='Rao') #keep all
 
-#since no variables can be decisively dropped, logit3 model is final (results similar all 3 times)#
-summary(logit3) #bio coef. is positive, meaning if a state produces more bio (all else equal), it is more likely to be blue
-                #coal and petrol coef. are neg, so vice versa
+#since no variables can be decisively dropped, logit3 model is final (coefficient estimates similar all 3 times)#
+summary(logit3) #bio always significant at 5% level (stable)
+                #petrol is usually significant at either 5% or 10% level (less stable)
+                #coal is sometimes significant at the 10% level (less stable)
 
 #prediction (average on all 3 training sets)#
 p1 <- predict(logit3,newdata=m6_train,type='response')
