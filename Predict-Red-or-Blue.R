@@ -197,6 +197,20 @@ misClasificError <- mean(p2 != m6_test$Affiliation);misClasificError
 confusion <- table(p2,m6_test$Affiliation);confusion #in all 3 cases, false pos. > false neg.
 print(paste('Accuracy',1-misClasificError)) #84% average accuracy (1: 88%, 2: 88%, 3: 77%))
 
+#k-folds cross validation#
+ctrl <- trainControl(method = "repeatedcv", number = 5, savePredictions = TRUE)
+mod_fit <- train(Affiliation ~ coal+bio+petrol,  
+                 data=m6, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5)
+summary(mod_fit) #output similar to previous 
+p3 = predict(mod_fit, newdata=m6_test,type = 'prob');p3
+p3 <- ifelse(p3$`Blue State` > 0.5,1,0)
+p3=as.factor(p3);p3
+levels(m6_test$Affiliation) <- c("0", "1")
+misClasificError <- mean(p3 != m6_test$Affiliation);misClasificError
+confusion <- table(p3,m6_test$Affiliation);confusion 
+print(paste('Accuracy',1-misClasificError)) #88% accuracy
+
 #Analyze quality of model#
 install.packages('generalhoslem') #Hosmer-Lemeshow Stat
 library('generalhoslem')
