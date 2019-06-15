@@ -31,8 +31,6 @@ m3=merge(m2,redvsblue,by.x='STATE',by.y = 'STATE') #merge m2 and data for politi
 summary(m3)
 
 ##impute missing values to 0##
-m3$Other[m3$Other<0]=0 #need get rid of negative values, will sqrt variables later
-                       # only 3 negative values and they are small, so shouldnt impact analysis
 m3[is.na(m3)] <- 0 #after doing some research, data seems to be missing because generation was at 0 or close to it
 str(m3)
 summary(m3)
@@ -111,6 +109,8 @@ p <- ggplot(renewables, aes(map_id = State)) +
 
 
 ##2.3 boxplots##
+m3$Other[m3$Other<0]=0 #need get rid of negative values, will sqrt variables 
+                       #only 3 negative values and they are small, so shouldnt impact analysis
 m5[] <- lapply(m5,sqrt) #sqrt values in dataframe in order to make differences more clear in plot
 
 #repeat steps from previous section#
