@@ -301,10 +301,6 @@ library('xtable')
 xtable(combine)
 
 
-ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
-
-
-
 ##3.3 random forest##
 library('randomForest')
 library('caret')
