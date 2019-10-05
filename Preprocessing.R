@@ -34,7 +34,7 @@ m3[is.na(m3)] <- 0 #after doing some research, data seems to be missing because 
 str(m3)
 summary(m3)
 
-##transform variables (calculate total generation per customer)##
+##transform variables (calculate total generation per customer)#
 m4=m3 #making sure that data (m3) is available in its original form
 
 #first create function for total gen/cust
