@@ -196,7 +196,7 @@ tuneRF(m4[,-c(1)],m4[,c(1)],stepFactor = 0.5,plot = TRUE,ntreeTry = 100,trace = 
 varImpPlot(rf1) #bio and coal look to be only important variables
 
 
-##3.4. KNN##
+##3.4. KNN#
 library(class)
 
 ##Generate a random number that is 80% of the total number of rows in dataset##
