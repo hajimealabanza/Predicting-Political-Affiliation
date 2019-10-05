@@ -56,5 +56,5 @@ aggregate(m6[,4:13],list(m6$Affiliation),mean) #numbers indicate large mean diff
 long_DF <- m6 %>% gather(Source, Generation, coal:wood) #reshape from wide to long in order to plot
 plot2=ggplot(data=long_DF,aes(x=Source,y=Generation,fill=Affiliation))+geom_boxplot()+xlab('Electricity Generation by Source')+ylab('Generation per Customer (√MWH)')+ggtitle('Red States vs. Blue States (2016)')+  theme(plot.title = element_text(hjust = 0.5));plot2
 
-##view correlation between variables##
+##view correlation between variables#
 m4.cor = cor(m4[,c(4:13)]);m4.cor
