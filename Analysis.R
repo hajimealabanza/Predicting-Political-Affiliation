@@ -191,31 +191,6 @@ par(mfrow=c(1,1))
 tuneRF(m4[,-c(1)],m4[,c(1)],stepFactor = 0.5,plot = TRUE,ntreeTry = 100,trace = TRUE,improve = 0.4) #anything above 3 mtry is the same meaning that all variables
 varImpPlot(rf1) #bio and coal look to be only important variables
 
-
-##3.2 KNN##
-library(class)
-
-##Generate a random number that is 80% of the total number of rows in dataset##
-gen_rand <- sample(1:nrow(m6), 0.80 * nrow(m4)) 
-
-##create normalization function##
-normalization <-function(x) { (x -min(x))/(max(x)-min(x))} 
-m4_norm <- as.data.frame(lapply(m4[,c(4:13)], normalization)) #run nomalization on all features
-summary(m4_norm)
-
-##create training/test##
-m4_train <- m4_norm[gen_rand,] #create training
-m4_test <- m4_norm[-gen_rand,] #create test 
-m4_target_cat <- m4[gen_rand,3] #3th column is reponse, political affiliation
-m4_test_cat <- m4[-gen_rand,3] #actual values
-
-##run model (done 3 times to assess stability)##
-knn1 <- knn(m4_train,m4_test,cl=m4_target_cat,k=3)  
-confusion <- table(knn1,m4_test_cat) #confusion matrix
-accuracy <- function(x){sum(diag(x)/(sum(rowSums(x)))) * 100}
-accuracy(confusion) #81% average accuracy (1: 81%, 2: 72%, 3: 90%)
-
-
 ###4.Summarize###
 
 ##build table combining all models##
