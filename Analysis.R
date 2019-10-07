@@ -1,19 +1,15 @@
+###3. Building Models###
 
-###3.Building Models###
+##3.1 Logistic Regression##
 
-##3.1 Create training and test sets##
-Train <- createDataPartition(m4$Affiliation, p=0.80, list=FALSE) 
-m4_train <- m4[Train, ]
-m4_test <- m4[ -Train, ]
-
-##3.2 logistic regression (repeated 3 times to assess stability)##
+#load packages#
 install.packages("stargazer")
 library('stargazer')
 library('MASS')
 library('car')
 library('caret')
 
-##3.1 Create training and test sets##
+#Create training and test sets#
 Train <- createDataPartition(m4$Affiliation, p=0.80, list=FALSE) 
 m4_train <- m4[Train, ]
 m4_test <- m4[-Train, ]
@@ -178,7 +174,7 @@ library('xtable')
 xtable(combine)
 
 
-##3.3 random forest##
+##3.2 random forest##
 library('randomForest')
 library('caret')
 
@@ -196,7 +192,7 @@ tuneRF(m4[,-c(1)],m4[,c(1)],stepFactor = 0.5,plot = TRUE,ntreeTry = 100,trace = 
 varImpPlot(rf1) #bio and coal look to be only important variables
 
 
-##3.4. KNN#
+##3.2 KNN##
 library(class)
 
 ##Generate a random number that is 80% of the total number of rows in dataset##
